@@ -80,8 +80,8 @@ Any modern web browser (Google Chrome, Firefox, Safari, Microsoft Edge). No Node
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/your-username/codesnippet-hub.git
-   cd codesnippet-hub
+   git clone https://github.com/gaikwad-ayush/CodeSnippetHub.git
+   cd CodeSnippetHub
    ```
 
 2. **Open `index.html` in your browser:**

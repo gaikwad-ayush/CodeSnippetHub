@@ -10,8 +10,8 @@ We follow the standard GitHub Flow:
 1. Fork the repository.
 2. Clone your fork locally:
    ```bash
-   git clone https://github.com/<your-username>/codesnippet-hub.git
-   cd codesnippet-hub
+   git clone https://github.com/gaikwad-ayush/CodeSnippetHub.git
+   cd CodeSnippetHub
    ```
 3. Create a descriptive feature branch:
    ```bash
