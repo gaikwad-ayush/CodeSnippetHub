@@ -124,6 +124,4 @@ We welcome contributions from developers worldwide! Please read our [CONTRIBUTIN
 
 ---
 
-## 📄 License
 
-Distributed under the **MIT License**. See [LICENSE](LICENSE) for more information.
