@@ -2,7 +2,6 @@
 > **An Open-Source Developer Snippet Manager**  
 > *Lightweight • Offline-First • Zero Backend • Browser-Native*
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Vanilla JS](https://img.shields.io/badge/Vanilla-ES6+-yellow.svg)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-CSS-38bdf8.svg)](https://tailwindcss.com)
 [![Prism.js](https://img.shields.io/badge/Syntax-Prism.js-orange.svg)](https://prismjs.com)
