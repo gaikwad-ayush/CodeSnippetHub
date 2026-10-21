@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CodeSnippet Hub - Open-Source Developer Snippet Manager</title>
+  <meta name="description" content="A lightweight, offline-first, browser-based developer utility to store, organize, search, syntax-highlight, and backup reusable code snippets.">
+  <meta name="theme-color" content="#0b0f19">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              400: '#818cf8',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- Prism.js Core & Component CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" integrity="sha512-VS9+ElsVs8zc2hnPvG0iVqJ8+k+t/e4VzT8X+9k8n0cK3B70t5p8R1n+Vf7Fh+R1sJ5P1N1uFfO40n57c01iHQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="min-h-screen flex flex-col bg-[#0b0f19] text-slate-100 selection:bg-indigo-500/30 selection:text-indigo-200 antialiased">
+
+  <!-- =========================================================================
+       Top Navigation Bar
+       ========================================================================= -->
+  <header class="sticky top-0 z-30 border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-xl">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+      
+      <!-- Logo & Branding -->
+      <div class="flex items-center gap-3">
+        <a href="#" class="flex items-center gap-2.5 group focus:outline-none" aria-label="CodeSnippet Hub Home">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-cyan-500 p-0.5 shadow-lg shadow-indigo-500/20 group-hover:shadow-indigo-500/40 transition-shadow">
+            <div class="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center text-cyan-400">
+              <svg class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+              </svg>
+            </div>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-base sm:text-lg font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
+                CodeSnippet <span class="text-indigo-400">Hub</span>
+              </span>
+              <span class="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-indigo-950/80 text-indigo-300 border border-indigo-800/60">
+                v1.2.0 • MIT
+              </span>
+            </div>
+            <p class="hidden md:block text-[11px] text-slate-400 font-medium">Developer Snippet Manager • Offline First</p>
+          </div>
+        </a>
+      </div>
+
+      <!-- Action Buttons & Navigation -->
+      <div class="flex items-center gap-2 sm:gap-3">
+        <!-- New Snippet Button -->
+        <button type="button" id="btn-new-snippet" 
+                class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white text-xs sm:text-sm font-semibold shadow-lg shadow-indigo-600/30 hover:shadow-indigo-600/50 transition-all flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                title="Create a new code snippet (Shortcut: N)">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+          </svg>
+          <span class="hidden sm:inline">New Snippet</span>
+          <span class="hidden md:inline px-1.5 py-0.2 rounded bg-indigo-700/60 text-[10px] font-mono">N</span>
+        </button>
+
+        <!-- Backup & Sync Button -->
+        <button type="button" id="btn-backup-modal" 
+                class="px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 text-xs sm:text-sm font-medium transition-colors flex items-center gap-1.5 focus:outline-none"
+                title="Export or Import Snippets Backup">
+          <svg class="w-4 h-4 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
+          </svg>
+          <span class="hidden md:inline">Backup &amp; Restore</span>
+        </button>
+
+        <!-- Help / Keyboard Shortcuts Button -->
+        <button type="button" id="btn-help-modal" 
+                class="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-800 text-xs sm:text-sm transition-colors focus:outline-none"
+                title="Keyboard Shortcuts &amp; Help (Shortcut: ?)">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </button>
+
+        <!-- GitHub Open Source Link -->
+        <a href="https://github.com" target="_blank" rel="noopener noreferrer" 
+           class="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-800 transition-colors"
+           title="View GitHub Repository (Open Source MIT)">
+          <svg class="w-4 h-4 fill-currentColor" viewBox="0 0 24 24">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+          </svg>
+        </a>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- =========================================================================
+       Main Content Container
+       ========================================================================= -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+    <!-- =======================================================================
+         Stats & Metrics Banner
+         ======================================================================= -->
+    <section aria-label="Dashboard Metrics" class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      
+      <!-- Total Snippets Card -->
+      <div class="p-4 rounded-2xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-md flex items-center justify-between">
+        <div>
+          <span class="text-xs font-medium text-slate-400">Total Snippets</span>
+          <div class="text-2xl font-extrabold text-slate-100 font-mono mt-1" id="stat-total-count">0</div>
+        </div>
+        <div class="w-10 h-10 rounded-xl bg-indigo-950/80 border border-indigo-800/50 flex items-center justify-center text-indigo-400">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Languages Supported Card -->
+      <div class="p-4 rounded-2xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-md flex items-center justify-between">
+        <div>
+          <span class="text-xs font-medium text-slate-400">Languages Used</span>
+          <div class="text-2xl font-extrabold text-slate-100 font-mono mt-1" id="stat-languages-count">0</div>
+        </div>
+        <div class="w-10 h-10 rounded-xl bg-cyan-950/80 border border-cyan-800/50 flex items-center justify-center text-cyan-400">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Starred / Favorites Card -->
+      <div class="p-4 rounded-2xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-md flex items-center justify-between">
+        <div>
+          <span class="text-xs font-medium text-slate-400">Favorites</span>
+          <div class="text-2xl font-extrabold text-amber-400 font-mono mt-1" id="stat-favorites-count">0</div>
+        </div>
+        <div class="w-10 h-10 rounded-xl bg-amber-950/80 border border-amber-800/50 flex items-center justify-center text-amber-400">
+          <svg class="w-5 h-5 fill-amber-400" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Storage Health Card -->
+      <div class="p-4 rounded-2xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-md flex flex-col justify-between">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-medium text-slate-400">Local Storage</span>
+          <span class="text-xs font-mono font-medium text-emerald-400" id="stat-storage-text">0.0 KB (0%)</span>
+        </div>
+        <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden mt-3">
+          <div id="stat-storage-bar" class="bg-gradient-to-r from-emerald-500 to-cyan-500 h-full rounded-full transition-all duration-500" style="width: 5%"></div>
+        </div>
+        <div class="flex items-center justify-between text-[10px] text-slate-500 font-mono mt-1">
+          <span>Client-side persistent</span>
+          <span>Max 5 MB</span>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- =======================================================================
+         Search, Filters & Layout Controls Toolbar
+         ======================================================================= -->
+    <section aria-label="Search and Filter Controls" class="p-4 rounded-2xl bg-slate-900/70 border border-slate-800/80 backdrop-blur-md space-y-3">
+      
+      <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+        
+        <!-- Search Input Bar -->
+        <div class="relative flex-1">
+          <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+          </div>
+          <input type="text" id="search-input" 
+                 class="w-full pl-10 pr-16 py-2.5 bg-slate-950/80 border border-slate-800 rounded-xl text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                 placeholder="Search snippet title, code syntax, tags, or description..."
+                 autocomplete="off">
+          
+          <div class="absolute inset-y-0 right-0 pr-3 flex items-center gap-1.5">
+            <button type="button" id="search-clear-btn" class="hidden text-slate-400 hover:text-white p-1" title="Clear search">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+            <span class="hidden sm:inline-block px-1.5 py-0.5 rounded bg-slate-800 text-[11px] font-mono text-slate-400 select-none border border-slate-700/60">/</span>
+          </div>
+        </div>
+
+        <!-- Filter Dropdowns & Controls -->
+        <div class="flex flex-wrap items-center gap-2">
+          
+          <!-- Language Select -->
+          <div class="relative min-w-[140px] flex-1 sm:flex-initial">
+            <select id="filter-language" 
+                    class="w-full appearance-none pl-3 pr-8 py-2.5 bg-slate-950/80 border border-slate-800 rounded-xl text-xs sm:text-sm text-slate-200 focus:outline-none focus:border-indigo-500 transition-all cursor-pointer">
+              <option value="all">All Languages</option>
+            </select>
+            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-slate-400">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Tags Select -->
+          <div class="relative min-w-[130px] flex-1 sm:flex-initial">
+            <select id="filter-tag" 
+                    class="w-full appearance-none pl-3 pr-8 py-2.5 bg-slate-950/80 border border-slate-800 rounded-xl text-xs sm:text-sm text-slate-200 focus:outline-none focus:border-indigo-500 transition-all cursor-pointer">
+              <option value="all">All Tags</option>
+            </select>
+            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-slate-400">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Sort Dropdown -->
+          <div class="relative min-w-[140px] flex-1 sm:flex-initial">
+            <select id="filter-sort" 
+                    class="w-full appearance-none pl-3 pr-8 py-2.5 bg-slate-950/80 border border-slate-800 rounded-xl text-xs sm:text-sm text-slate-200 focus:outline-none focus:border-indigo-500 transition-all cursor-pointer">
+              <option value="newest">Newest First</option>
+              <option value="oldest">Oldest First</option>
+              <option value="title_asc">Title (A-Z)</option>
+              <option value="title_desc">Title (Z-A)</option>
+              <option value="lines_desc">Most Lines</option>
+            </select>
+            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-slate-400">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Starred Toggle Pill Button -->
+          <button type="button" id="filter-fav-btn" 
+                  class="px-3 py-2.5 rounded-xl border border-slate-800 bg-slate-950/80 text-slate-400 hover:text-amber-400 text-xs sm:text-sm font-medium transition-all flex items-center gap-1.5 focus:outline-none"
+                  title="Toggle favorites filter">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+            </svg>
+            <span class="hidden sm:inline">Favorites</span>
+          </button>
+
+          <!-- View Mode Toggle Buttons (Grid vs List) -->
+          <div class="inline-flex rounded-xl bg-slate-950/80 p-0.5 border border-slate-800">
+            <button type="button" id="view-grid-btn" class="p-2 rounded-lg bg-indigo-600 text-white transition-colors" title="Grid View (Shortcut: G)">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+              </svg>
+            </button>
+            <button type="button" id="view-list-btn" class="p-2 rounded-lg text-slate-400 hover:text-white transition-colors" title="List View (Shortcut: G)">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+              </svg>
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Active Filter Chips Indicator Bar -->
+      <div id="active-filters-bar" class="hidden flex items-center justify-between pt-2 border-t border-slate-800/60 text-xs">
+        <div class="flex items-center gap-2 flex-wrap" id="active-filter-chips">
+          <!-- Populated dynamically -->
+        </div>
+        <button type="button" id="btn-clear-all-filters" class="text-xs text-indigo-400 hover:text-indigo-300 font-medium hover:underline shrink-0">
+          Clear all filters
+        </button>
+      </div>
+
+    </section>
+
+    <!-- =======================================================================
+         Snippets Collection Container (Grid / List)
+         ======================================================================= -->
+    <section aria-label="Snippet Collection">
+      <div id="snippets-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        <!-- Rendered dynamically by UIRenderer -->
+      </div>
+    </section>
+
+  </main>
+
+  <!-- =========================================================================
+       Footer
+       ========================================================================= -->
+  <footer class="mt-auto border-t border-slate-800/80 bg-slate-950/60 backdrop-blur-md py-6 text-xs text-slate-500">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
+        <span>CodeSnippet Hub • Browser-Native &amp; Offline-Ready</span>
+      </div>
+      <div class="flex items-center gap-4">
+        <span>Licensed under MIT</span>
+        <span>•</span>
+        <a href="https://github.com" target="_blank" rel="noopener noreferrer" class="hover:text-slate-300 transition-colors">GitHub Repository</a>
+        <span>•</span>
+        <span>Storage: HTML5 LocalStorage</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- =========================================================================
+       MODAL 1: Create / Edit Snippet Modal
+       ========================================================================= -->
+  <div id="snippet-form-modal" class="app-modal hidden fixed inset-0 z-50 items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="modal-form-title">
+    <div class="modal-dialog-box relative w-full max-w-3xl rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl shadow-indigo-950/50 flex flex-col max-h-[90vh] overflow-hidden transform scale-95 opacity-0">
+      
+      <!-- Modal Header -->
+      <div class="p-5 border-b border-slate-800 flex items-center justify-between">
+        <h2 id="modal-form-title" class="text-lg font-bold text-slate-100 flex items-center gap-2">
+          Create New Snippet
+        </h2>
+        <button type="button" id="btn-modal-form-close" class="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors" aria-label="Close modal">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Modal Body (Scrollable) -->
+      <div class="p-6 overflow-y-auto space-y-4">
+        <input type="hidden" id="form-snippet-id">
+
+        <!-- Title & Language in 2-column grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div class="sm:col-span-2 space-y-1.5">
+            <label for="form-title" class="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
+              Snippet Title <span class="text-rose-400">*</span>
+            </label>
+            <input type="text" id="form-title" required
+                   class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                   placeholder="e.g. Async Fetcher with Retry & Concurrency">
+          </div>
+
+          <div class="space-y-1.5">
+            <label for="form-language" class="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
+              Language <span class="text-rose-400">*</span>
+            </label>
+            <div class="relative">
+              <select id="form-language" 
+                      class="w-full appearance-none px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-100 focus:outline-none focus:border-indigo-500 cursor-pointer">
+                <option value="javascript">JavaScript (.js)</option>
+                <option value="typescript">TypeScript (.ts)</option>
+                <option value="python">Python (.py)</option>
+                <option value="cpp">C++ (.cpp)</option>
+                <option value="html">HTML5 (.html)</option>
+                <option value="css">CSS3 (.css)</option>
+                <option value="sql">SQL (.sql)</option>
+                <option value="bash">Bash (.sh)</option>
+                <option value="json">JSON (.json)</option>
+                <option value="rust">Rust (.rs)</option>
+                <option value="go">Go (.go)</option>
+                <option value="java">Java (.java)</option>
+              </select>
+              <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-400">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Description / Usage Notes -->
+        <div class="space-y-1.5">
+          <label for="form-description" class="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
+            Description / Context <span class="text-slate-500 font-normal lowercase">(optional)</span>
+          </label>
+          <input type="text" id="form-description" 
+                 class="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                 placeholder="Brief explanation of logic, parameters, or edge cases...">
+        </div>
+
+        <!-- Tags Input Widget -->
+        <div class="space-y-1.5">
+          <label for="form-tag-input" class="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
+            Tags <span class="text-slate-500 font-normal lowercase">(press Enter or comma to add tag)</span>
+          </label>
+          <div class="p-2 bg-slate-950 border border-slate-800 rounded-xl flex flex-wrap items-center gap-1.5 focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500">
+            <div id="form-tags-container" class="flex flex-wrap items-center gap-1.5">
+              <!-- Tag chips rendered here -->
+            </div>
+            <input type="text" id="form-tag-input" 
+                   class="bg-transparent text-sm text-slate-200 placeholder-slate-500 focus:outline-none px-2 py-1 flex-1 min-w-[120px]"
+                   placeholder="Add tag (e.g. async, api)...">
+          </div>
+
+          <!-- Suggested Preset Tags -->
+          <div class="flex items-center gap-1.5 flex-wrap pt-1 text-[11px] text-slate-400">
+            <span>Suggestions:</span>
+            <button type="button" class="preset-tag-btn hover:text-indigo-300 hover:underline" data-preset="utility">#utility</button>
+            <button type="button" class="preset-tag-btn hover:text-indigo-300 hover:underline" data-preset="async">#async</button>
+            <button type="button" class="preset-tag-btn hover:text-indigo-300 hover:underline" data-preset="api">#api</button>
+            <button type="button" class="preset-tag-btn hover:text-indigo-300 hover:underline" data-preset="database">#database</button>
+            <button type="button" class="preset-tag-btn hover:text-indigo-300 hover:underline" data-preset="algorithms">#algorithms</button>
+            <button type="button" class="preset-tag-btn hover:text-indigo-300 hover:underline" data-preset="dom">#dom</button>
+          </div>
+        </div>
+
+        <!-- Code Editor Section with Tabs (Editor vs Syntax Preview) -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
+              Code Content <span class="text-rose-400">*</span>
+            </label>
+            <!-- View Tabs -->
+            <div class="flex items-center border border-slate-800 rounded-lg p-0.5 bg-slate-950 text-xs">
+              <button type="button" id="form-tab-edit" class="px-3 py-1 rounded-md font-medium border border-indigo-500 text-indigo-400 bg-indigo-950/40 transition-colors">
+                Editor
+              </button>
+              <button type="button" id="form-tab-preview" class="px-3 py-1 rounded-md font-medium border border-transparent text-slate-400 hover:text-slate-200 transition-colors">
+                Syntax Preview
+              </button>
+            </div>
+          </div>
+
+          <!-- Editor View -->
+          <div id="form-editor-view">
+            <div class="code-editor-wrapper">
+              <div id="form-code-lines" class="line-numbers-gutter">
+                <div>1</div>
+              </div>
+              <textarea id="form-code" class="code-editor-textarea" spellcheck="false" placeholder="// Paste or type your code snippet here...&#10;// Tab key inserts 2 spaces&#10;// Ctrl + Enter to quickly save"></textarea>
+            </div>
+            <div class="flex items-center justify-between text-[11px] text-slate-500 mt-1 px-1 font-mono">
+              <span>Supports indentation, tab key (2 spaces)</span>
+              <span>Shortcut: Ctrl + Enter to save</span>
+            </div>
+          </div>
+
+          <!-- Syntax Preview View -->
+          <div id="form-preview-view" class="hidden rounded-xl bg-slate-950 border border-slate-800 p-4 max-h-72 overflow-y-auto">
+            <pre class="!m-0"><code id="form-preview-code"></code></pre>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="p-4 bg-slate-950/80 border-t border-slate-800 flex items-center justify-between">
+        <span class="text-xs text-slate-500 hidden sm:inline">Stored offline in LocalStorage</span>
+        <div class="flex items-center gap-2 ml-auto">
+          <button type="button" id="btn-modal-form-cancel" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-medium transition-colors">
+            Cancel
+          </button>
+          <button type="button" id="btn-modal-form-save" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold shadow-lg shadow-indigo-600/30 transition-all flex items-center gap-1.5">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            Save Snippet
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MODAL 2: Snippet Detail / Full View Modal
+       ========================================================================= -->
+  <div id="snippet-detail-modal" class="app-modal hidden fixed inset-0 z-50 items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="detail-title">
+    <div class="modal-dialog-box relative w-full max-w-4xl rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl shadow-indigo-950/50 flex flex-col max-h-[90vh] overflow-hidden transform scale-95 opacity-0">
+      
+      <!-- Detail Header -->
+      <div class="p-5 border-b border-slate-800 flex items-start justify-between gap-4">
+        <div class="space-y-1.5 flex-1 min-w-0">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span id="detail-lang-badge" class="px-2.5 py-0.5 rounded-full text-xs font-semibold font-mono tracking-wide uppercase border">
+              Language
+            </span>
+            <span id="detail-meta-lines" class="text-xs text-slate-400 font-mono">0 lines</span>
+            <span class="text-xs text-slate-600">•</span>
+            <span id="detail-meta-time" class="text-xs text-slate-400 font-mono">Updated recently</span>
+          </div>
+          <h2 id="detail-title" class="text-xl font-bold text-slate-100 break-words">
+            Snippet Title
+          </h2>
+          <p id="detail-description" class="text-sm text-slate-400 leading-relaxed"></p>
+          <div id="detail-tags" class="flex items-center gap-1.5 flex-wrap pt-1"></div>
+        </div>
+
+        <button type="button" id="btn-detail-close" class="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors shrink-0" aria-label="Close modal">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Detail Code Window -->
+      <div class="relative flex-1 overflow-y-auto bg-slate-950 p-4 border-b border-slate-800">
+        <pre class="!m-0"><code id="detail-code"></code></pre>
+      </div>
+
+      <!-- Detail Actions Footer -->
+      <div class="p-4 bg-slate-950/90 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-2">
+          <!-- Copy Raw Code -->
+          <button type="button" id="btn-detail-copy" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-md shadow-indigo-600/30 transition-all flex items-center gap-1.5">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+            </svg>
+            Copy Code
+          </button>
+
+          <!-- Copy as Markdown Block -->
+          <button type="button" id="btn-detail-copy-md" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium transition-colors flex items-center gap-1.5" title="Copy formatted as ```language ... ```">
+            <svg class="w-4 h-4 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            Copy Markdown
+          </button>
+
+          <!-- Download as raw file -->
+          <button type="button" id="btn-detail-download" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium transition-colors flex items-center gap-1.5">
+            <svg class="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+            </svg>
+            Download File
+          </button>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <!-- Edit -->
+          <button type="button" id="btn-detail-edit" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-amber-950/40 text-amber-300 border border-slate-700 hover:border-amber-700/50 text-xs font-medium transition-colors flex items-center gap-1.5">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+            </svg>
+            Edit
+          </button>
+
+          <!-- Delete -->
+          <button type="button" id="btn-detail-delete" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-rose-950/40 text-rose-300 border border-slate-700 hover:border-rose-700/50 text-xs font-medium transition-colors flex items-center gap-1.5">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+            </svg>
+            Delete
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MODAL 3: Delete Confirmation Modal
+       ========================================================================= -->
+  <div id="delete-confirm-modal" class="app-modal hidden fixed inset-0 z-50 items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="modal-delete-title">
+    <div class="modal-dialog-box relative w-full max-w-md rounded-2xl bg-slate-900 border border-rose-900/40 shadow-2xl shadow-rose-950/50 p-6 space-y-4 transform scale-95 opacity-0">
+      <div class="w-12 h-12 rounded-xl bg-rose-950/80 border border-rose-800/60 flex items-center justify-center text-rose-400 mx-auto">
+        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+        </svg>
+      </div>
+
+      <div class="text-center space-y-2">
+        <h3 id="modal-delete-title" class="text-lg font-bold text-slate-100">Permanently Delete Snippet?</h3>
+        <p class="text-sm text-slate-400">
+          Are you sure you want to remove <span id="delete-snippet-title" class="font-semibold text-slate-200"></span> from your local database? This action cannot be undone.
+        </p>
+      </div>
+
+      <div class="flex items-center justify-center gap-3 pt-2">
+        <button type="button" id="btn-delete-cancel" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-medium transition-colors">
+          Cancel
+        </button>
+        <button type="button" id="btn-delete-confirm" class="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-sm font-semibold shadow-lg shadow-rose-600/30 transition-all">
+          Yes, Delete Snippet
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MODAL 4: Backup & Restore Modal
+       ========================================================================= -->
+  <div id="backup-modal" class="app-modal hidden fixed inset-0 z-50 items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="modal-backup-title">
+    <div class="modal-dialog-box relative w-full max-w-2xl rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl shadow-indigo-950/50 flex flex-col max-h-[90vh] overflow-hidden transform scale-95 opacity-0">
+      
+      <!-- Backup Modal Header -->
+      <div class="p-5 border-b border-slate-800 flex items-center justify-between">
+        <h2 id="modal-backup-title" class="text-lg font-bold text-slate-100 flex items-center gap-2">
+          <svg class="w-5 h-5 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
+          </svg>
+          Backup &amp; Restore Data Portability
+        </h2>
+        <button type="button" id="btn-backup-close" class="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors" aria-label="Close modal">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Backup Tabs -->
+      <div class="flex border-b border-slate-800 bg-slate-950/50 px-5 pt-3 gap-6">
+        <button type="button" id="tab-btn-export" class="pb-3 border-b-2 border-indigo-500 text-indigo-400 text-sm font-semibold transition-colors">
+          Export Backup (JSON)
+        </button>
+        <button type="button" id="tab-btn-import" class="pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 text-sm font-semibold transition-colors">
+          Import / Restore
+        </button>
+      </div>
+
+      <!-- Backup Modal Content -->
+      <div class="p-6 overflow-y-auto space-y-5">
+        
+        <!-- SECTION: EXPORT -->
+        <div id="backup-section-export" class="space-y-4">
+          <div class="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
+            <h3 class="text-sm font-semibold text-slate-200">Export All Snippets</h3>
+            <p class="text-xs text-slate-400 leading-relaxed">
+              Download all your code snippets, tags, and favorites into a portable JSON file. You can restore this file on any machine or browser.
+            </p>
+            <div class="text-xs font-mono text-indigo-400 pt-1" id="backup-export-summary">
+              Calculating backup size...
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-3">
+            <button type="button" id="btn-download-backup" class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold shadow-lg shadow-indigo-600/30 transition-all flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+              </svg>
+              Download JSON File
+            </button>
+            <button type="button" id="btn-copy-backup-json" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-medium transition-colors flex items-center gap-2">
+              <svg class="w-4 h-4 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+              </svg>
+              Copy Raw JSON
+            </button>
+          </div>
+        </div>
+
+        <!-- SECTION: IMPORT -->
+        <div id="backup-section-import" class="hidden space-y-4">
+          <!-- Dropzone -->
+          <div id="import-dropzone" class="p-6 border-2 border-dashed border-slate-700 hover:border-indigo-500 rounded-2xl bg-slate-950/60 text-center space-y-2 transition-all cursor-pointer">
+            <svg class="w-8 h-8 text-indigo-400 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+            </svg>
+            <p class="text-sm font-medium text-slate-200">
+              Drag &amp; drop a backup JSON file here, or <label for="import-file-input" class="text-indigo-400 hover:underline cursor-pointer">browse file</label>
+            </p>
+            <p class="text-[11px] text-slate-500">Supports files exported from CodeSnippet Hub (.json)</p>
+            <input type="file" id="import-file-input" accept=".json,application/json" class="hidden">
+          </div>
+
+          <!-- Paste Raw JSON option -->
+          <div class="space-y-1.5">
+            <label for="import-json-text" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              Or Paste JSON Content Directly
+            </label>
+            <textarea id="import-json-text" rows="4" 
+                      class="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-xs font-mono text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500"
+                      placeholder='{"app": "CodeSnippet Hub", "snippets": [...] }'></textarea>
+          </div>
+
+          <!-- Import Conflict Options -->
+          <div class="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
+            <span class="block text-xs font-semibold text-slate-300">Import Strategy:</span>
+            <div class="flex items-center gap-6 text-xs text-slate-300">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="radio" name="import-mode" id="import-mode-merge" value="merge" checked class="text-indigo-600 focus:ring-indigo-500">
+                <span>Merge (keeps existing, updates duplicates)</span>
+              </label>
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="radio" name="import-mode" id="import-mode-overwrite" value="overwrite" class="text-indigo-600 focus:ring-indigo-500">
+                <span class="text-rose-300">Overwrite All (replaces current snippets)</span>
+              </label>
+            </div>
+          </div>
+
+          <button type="button" id="btn-perform-import" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold shadow-lg shadow-indigo-600/30 transition-all">
+            Restore Snippets into Local Storage
+          </button>
+        </div>
+
+        <!-- Danger Zone / Sample Reset -->
+        <div class="pt-4 border-t border-slate-800 space-y-3">
+          <span class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Reset &amp; Sample Data</span>
+          <div class="flex flex-wrap items-center gap-3">
+            <button type="button" id="btn-restore-defaults" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium transition-colors">
+              Reset to Default Examples
+            </button>
+            <button type="button" id="btn-clear-all-data" class="px-3.5 py-2 rounded-xl bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-800/40 text-xs font-medium transition-colors">
+              Wipe All Snippets
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MODAL 5: Keyboard Shortcuts Reference Modal
+       ========================================================================= -->
+  <div id="help-modal" class="app-modal hidden fixed inset-0 z-50 items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="modal-help-title">
+    <div class="modal-dialog-box relative w-full max-w-lg rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl p-6 space-y-5 transform scale-95 opacity-0">
+      
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h2 id="modal-help-title" class="text-base font-bold text-slate-100 flex items-center gap-2">
+          <svg class="w-5 h-5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
+          </svg>
+          Keyboard Shortcuts &amp; Tips
+        </h2>
+        <button type="button" id="btn-help-close" class="p-1 rounded-lg text-slate-400 hover:text-white" aria-label="Close help">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div class="flex items-center justify-between p-2 rounded-lg bg-slate-950 border border-slate-800/80">
+          <span class="text-slate-300 font-medium">Create New Snippet</span>
+          <kbd class="px-2 py-1 rounded bg-slate-800 font-mono text-slate-300 border border-slate-700">N</kbd>
+        </div>
+        <div class="flex items-center justify-between p-2 rounded-lg bg-slate-950 border border-slate-800/80">
+          <span class="text-slate-300 font-medium">Quick Search / Filter</span>
+          <kbd class="px-2 py-1 rounded bg-slate-800 font-mono text-slate-300 border border-slate-700">/</kbd>
+        </div>
+        <div class="flex items-center justify-between p-2 rounded-lg bg-slate-950 border border-slate-800/80">
+          <span class="text-slate-300 font-medium">Toggle Grid / List View</span>
+          <kbd class="px-2 py-1 rounded bg-slate-800 font-mono text-slate-300 border border-slate-700">G</kbd>
+        </div>
+        <div class="flex items-center justify-between p-2 rounded-lg bg-slate-950 border border-slate-800/80">
+          <span class="text-slate-300 font-medium">Save Snippet (Inside Editor)</span>
+          <div class="flex items-center gap-1">
+            <kbd class="px-2 py-1 rounded bg-slate-800 font-mono text-slate-300 border border-slate-700">Ctrl</kbd>
+            <span>+</span>
+            <kbd class="px-2 py-1 rounded bg-slate-800 font-mono text-slate-300 border border-slate-700">Enter</kbd>
+          </div>
+        </div>
+        <div class="flex items-center justify-between p-2 rounded-lg bg-slate-950 border border-slate-800/80">
+          <span class="text-slate-300 font-medium">Close Modal / Cancel</span>
+          <kbd class="px-2 py-1 rounded bg-slate-800 font-mono text-slate-300 border border-slate-700">Esc</kbd>
+        </div>
+        <div class="flex items-center justify-between p-2 rounded-lg bg-slate-950 border border-slate-800/80">
+          <span class="text-slate-300 font-medium">View Keyboard Shortcuts</span>
+          <kbd class="px-2 py-1 rounded bg-slate-800 font-mono text-slate-300 border border-slate-700">?</kbd>
+        </div>
+      </div>
+
+      <div class="p-3 rounded-xl bg-indigo-950/40 border border-indigo-800/40 text-[11px] text-indigo-300 leading-relaxed">
+        <strong>Tip:</strong> Click on any tag chip in snippet cards to instantly filter all snippets by that specific tag!
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none" aria-live="polite"></div>
+
+  <!-- =========================================================================
+       Prism.js Dependencies
+       ========================================================================= -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-c.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-cpp.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-sql.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-rust.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-go.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+
+  <!-- =========================================================================
+       Application Script Modules
+       ========================================================================= -->
+  <script src="js/sample-snippets.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/state.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>
